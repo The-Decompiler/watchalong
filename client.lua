@@ -1,7 +1,10 @@
+local math = require("math")
 local mp = require("mp")
 local socket = require("socket")
 local host, port = "localhost", 27001
 local tcp = assert(socket.tcp())
+
+local SEEK_THRESHOLD = 0.4
 
 local EVENT_PLAY = 0
 local EVENT_PAUSE = 1
@@ -52,7 +55,9 @@ local function receiveReducer(event, pos)
 	elseif event == EVENT_PAUSE then
 		mp.set_property_native("pause", true)
 	elseif event == EVENT_SEEK then
-		mp.set_property("time-pos", pos)
+		if math.abs(positionNotNegative() - pos) > SEEK_THRESHOLD then
+			mp.set_property("time-pos", pos)
+		end
 	end
 end
 
