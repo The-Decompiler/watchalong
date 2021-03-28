@@ -19,10 +19,6 @@ local function decode(input)
 	return tonumber(t[1]), tonumber(t[2])
 end
 
-local function sendStatus(event, pos)
-	tcp:send(encode(event, pos))
-end
-
 local function positionNotNegative(pos)
 	pos = pos or mp.get_property("time-pos")
 	if pos ~= nil and tonumber(pos) >= 0 then
@@ -32,17 +28,21 @@ local function positionNotNegative(pos)
 	end
 end
 
+local function sendStatus(event)
+	tcp:send(encode(event, positionNotNegative()))
+end
+
 local function eventPause(_, val)
 	if val == true then
-		sendStatus(EVENT_PAUSE, positionNotNegative())
+		sendStatus(EVENT_PAUSE)
 	elseif val == false then
-		sendStatus(EVENT_PLAY, positionNotNegative())
+		sendStatus(EVENT_PLAY)
 	end
 end
 
 local function eventSeek(_, val)
 	if val == false then
-		sendStatus(EVENT_SEEK, positionNotNegative())
+		sendStatus(EVENT_SEEK)
 	end
 end
 
