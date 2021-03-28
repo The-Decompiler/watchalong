@@ -55,11 +55,15 @@ func (conns *Connections) Remove(conn net.Conn) error {
 	return fmt.Errorf("connection '%v' not in connections '%v'", conn, conns)
 }
 
-func (conns *Connections) Broadcast(msg []byte) {
+func (conns *Connections) Broadcast(msg []byte, exclude net.Conn) {
 	conns.Lock()
 	defer conns.Unlock()
 
 	for _, conn := range conns.Conns {
+		if conn == exclude {
+			continue
+		}
+
 		if _, err := conn.Write(msg); err != nil {
 			log.Printf("failed to write to connection '%v': %v\n", conn, err)
 		}
@@ -112,8 +116,9 @@ func (conns *Connections) HandleConnection(conn net.Conn) {
 			continue
 		}
 
-		// simply pass the message to everyone else
-		conns.Broadcast(msg)
+		// simply pass the message to everyone excluding the original sender
+		// which causes weird syncing on their side
+		conns.Broadcast(msg, conn)
 	}
 }
 
