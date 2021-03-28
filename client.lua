@@ -1,7 +1,7 @@
 local math = require("math")
 local mp = require("mp")
 local socket = require("socket")
-local host, port = "localhost", 27001
+
 local tcp = assert(socket.tcp())
 
 local SEEK_THRESHOLD = 0.4
@@ -61,8 +61,20 @@ local function receiveReducer(event, pos)
 	end
 end
 
+local function getAddress()
+	local t = {}
+	local address = mp.get_opt("address")
+	if address == nil then
+		return "localhost", 27001
+	end
+	for token in string.gmatch(address, "[^:]+") do
+		table.insert(t, token)
+	end
+	return t[1], tonumber(t[2])
+end
 
-tcp:connect(host, port)
+
+tcp:connect(getAddress())
 
 mp.observe_property("pause", "bool", eventPause)
 mp.observe_property("seeking", "bool", eventSeek)
