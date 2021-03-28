@@ -1,9 +1,11 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"log"
 	"net"
+	"os"
 	"strconv"
 	"strings"
 	"sync"
@@ -123,7 +125,16 @@ func (conns *Connections) HandleConnection(conn net.Conn) {
 }
 
 func main() {
-	server, err := net.Listen("tcp", "localhost:27001")
+	var address string
+	flag.StringVar(&address, "address", "", "listening address")
+	flag.Parse()
+
+	if address == "" {
+		flag.Usage()
+		os.Exit(1)
+	}
+
+	server, err := net.Listen("tcp", address)
 	if err != nil {
 		log.Fatalf("failed to create server\n")
 	}
