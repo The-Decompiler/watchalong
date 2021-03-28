@@ -3,7 +3,9 @@ local socket = require("socket")
 local host, port = "localhost", 27001
 local tcp = assert(socket.tcp())
 
-local EVENTS = { "EVENT_PLAY", "EVENT_PAUSE", "EVENT_SEEK" }
+local EVENT_PLAY = 0
+local EVENT_PAUSE = 1
+local EVENT_SEEK = 2
 
 local function encode(event, pos)
 	return string.format("%d %f\n", event, pos)
@@ -14,7 +16,7 @@ local function decode(input)
 	for token in string.gmatch(input, "%S+") do
 		table.insert(t, token)
 	end
-	return t[1], tonumber(t[2])
+	return tonumber(t[1]), tonumber(t[2])
 end
 
 local function sendStatus(event, pos)
@@ -32,24 +34,24 @@ end
 
 local function eventPause(_, val)
 	if val == true then
-		sendStatus(1, positionNotNegative())
+		sendStatus(EVENT_PAUSE, positionNotNegative())
 	elseif val == false then
-		sendStatus(0, positionNotNegative())
+		sendStatus(EVENT_PLAY, positionNotNegative())
 	end
 end
 
 local function eventSeek(_, val)
 	if val == false then
-		sendStatus(2, positionNotNegative())
+		sendStatus(EVENT_SEEK, positionNotNegative())
 	end
 end
 
 local function receiveReducer(event, pos)
-	if event == "EVENT_PLAY" then
+	if event == EVENT_PLAY then
 		mp.set_property_native("pause", false)
-	elseif event == "EVENT_PAUSE" then
+	elseif event == EVENT_PAUSE then
 		mp.set_property_native("pause", true)
-	elseif event == "EVENT_SEEK" then
+	elseif event == EVENT_SEEK then
 		mp.set_property("time-pos", pos)
 	end
 end
@@ -65,7 +67,6 @@ tcp:settimeout(0.05)
 mp.add_periodic_timer(0.1, function()
 	local msg = tcp:receive()
 	if (msg ~= nil) then
-		local event, pos = decode(msg)
-		receiveReducer(EVENTS[event + 1], pos)
+		receiveReducer(decode(msg))
 	end
 end)
