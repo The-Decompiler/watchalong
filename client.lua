@@ -5,6 +5,7 @@ local socket = require("socket")
 local tcp = assert(socket.tcp())
 
 local SEEK_THRESHOLD = 0.4
+local SEND_MESSAGE = true
 
 local EVENT_PLAY = 0
 local EVENT_PAUSE = 1
@@ -32,7 +33,11 @@ local function positionNotNegative(pos)
 end
 
 local function sendStatus(event)
-	tcp:send(encode(event, positionNotNegative()))
+	if SEND_MESSAGE then
+		tcp:send(encode(event, positionNotNegative()))
+	else
+		SEND_MESSAGE = true
+	end
 end
 
 local function eventPause(_, val)
@@ -50,6 +55,8 @@ local function eventSeek(_, val)
 end
 
 local function receiveReducer(event, pos)
+	SEND_MESSAGE = false
+
 	if event == EVENT_PLAY then
 		mp.set_property_native("pause", false)
 	elseif event == EVENT_PAUSE then
