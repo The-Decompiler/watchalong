@@ -59,11 +59,14 @@ local function receiveReducer(event, pos)
 
 	if event == EVENT_PLAY then
 		mp.set_property_native("pause", false)
+		mp.osd_message("Playing")
 	elseif event == EVENT_PAUSE then
 		mp.set_property_native("pause", true)
+		mp.osd_message("Paused")
 	elseif event == EVENT_SEEK then
 		if math.abs(positionNotNegative() - pos) > SEEK_THRESHOLD then
 			mp.set_property("time-pos", pos)
+			mp.osd_message("Seeking")
 		end
 	end
 end
